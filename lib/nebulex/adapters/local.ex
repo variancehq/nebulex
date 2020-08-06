@@ -580,62 +580,69 @@ defmodule Nebulex.Adapters.Local do
     end
   end
 
-  defp update_stats(value, _action, nil), do: value
-  defp update_stats(value, _action, {nil, _}), do: value
+  defp update_stats(value, action, counter_ref) do
+    do_update_stats(value, action, counter_ref)
+  rescue
+    _ ->
+      value
+  end
 
-  defp update_stats(nil, :get, counter_ref) do
+  defp do_update_stats(value, _action, nil), do: value
+  defp do_update_stats(value, _action, {nil, _}), do: value
+
+  defp do_update_stats(nil, :get, counter_ref) do
     :ok = Stats.incr(counter_ref, :misses)
     nil
   end
 
-  defp update_stats(value, :get, counter_ref) do
+  defp do_update_stats(value, :get, counter_ref) do
     :ok = Stats.incr(counter_ref, :hits)
     value
   end
 
-  defp update_stats(value, :expired, counter_ref) do
+  defp do_update_stats(value, :expired, counter_ref) do
     :ok = Stats.incr(counter_ref, :evictions)
     :ok = Stats.incr(counter_ref, :expirations)
     value
   end
 
-  defp update_stats(value, :write, counter_ref) do
+  defp do_update_stats(value, :write, counter_ref) do
     :ok = Stats.incr(counter_ref, :writes)
     value
   end
 
-  defp update_stats(true, :put, counter_ref) do
+  defp do_update_stats(true, :put, counter_ref) do
     :ok = Stats.incr(counter_ref, :writes)
     true
   end
 
-  defp update_stats(true, :put_all, {counter_ref, entries}) do
+  defp do_update_stats(true, :put_all, {counter_ref, entries}) do
     :ok = Stats.incr(counter_ref, :writes, length(entries))
     true
   end
 
-  defp update_stats(value, :delete, counter_ref) do
+  defp do_update_stats(value, :delete, counter_ref) do
     :ok = Stats.incr(counter_ref, :evictions)
     value
   end
 
-  defp update_stats(nil, :take, counter_ref) do
+  defp do_update_stats(nil, :take, counter_ref) do
     :ok = Stats.incr(counter_ref, :misses)
     nil
   end
 
-  defp update_stats(value, :take, counter_ref) do
+  defp do_update_stats(value, :take, counter_ref) do
     :ok = Stats.incr(counter_ref, :hits)
     :ok = Stats.incr(counter_ref, :evictions)
     value
   end
 
-  defp update_stats(value, :flush, counter_ref) do
+  defp do_update_stats(value, :flush, counter_ref) do
     :ok = Stats.incr(counter_ref, :evictions, value)
     value
   end
 
-  defp update_stats(value, _action, _counter_ref) do
+  defp do_update_stats(value, _action, _counter_ref) do
     value
   end
 end
